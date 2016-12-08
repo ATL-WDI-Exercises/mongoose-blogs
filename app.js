@@ -16,8 +16,6 @@ function quit() {
   mongoose.disconnect();
 }
 
-let user1, user2;
-
 Comment.remove({})
 .then(function() {
   return BlogEntry.remove({});
@@ -48,25 +46,32 @@ Comment.remove({})
 })
 .then(function(savedBlogEntries) {
   console.log('savedBlogEntries:', savedBlogEntries);
+  return Promise.all( [ User.find(), BlogEntry.find() ] );
+})
+.then(function(results) {
+  let users = results[0];
+  let entries = results[1];
+
   // create some comments and return a promise
   let comment1 = new Comment( {
     text: 'Yeah!!!',
-    user: user2,
-    blogEntry: savedBlogEntries[0]
+    user: users[1],
+    blogEntry: entries[0]
   });
   let comment2 = new Comment( {
     text: 'So sorry!!!',
-    user: user1,
-    blogEntry: savedBlogEntries[1]
+    user: users[0],
+    blogEntry: entries[1]
   });
+  console.log('about to save comments:', comment1, comment2);
   return Comment.create([comment1, comment2]);
 })
 .then(function(savedComments) {
   console.log('savedComments:', savedComments);
-  return Comment.find().populate('user blogEntry');
+  return Comment.find({}).populate('user blogEntry');
 })
 .then(function(allComments) {
-  // console.log('allComments:', allComments);
+  console.log('allComments:', allComments);
   allComments.forEach(function(comment) {
     console.log('User ' + comment.user.name +
        ' created a comment for blog entry ' + comment.blogEntry.title +
